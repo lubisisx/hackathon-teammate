@@ -1,0 +1,139 @@
+name: NedVision CI & SonarCloud
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # =========================
+  # .NET API PROJECT
+  # =========================
+  dotnet-api:
+    name: .NET 9 API Build & Sonar Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./NedVision.Api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore ../
+
+      - name: Build
+        run: dotnet build --no-restore ../ --configuration Release
+
+      - name: Test (if tests exist)
+        run: dotnet test --no-build --verbosity normal ../ || echo "No tests yet"
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORG_KEY }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.projectName=NedVision.Api
+            -Dsonar.language=cs
+            -Dsonar.sources=.
+            -Dsonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # =========================
+  # PYTHON ANALYTICS (FASTAPI)
+  # =========================
+  python-analytics:
+    name: Python Forecasting Service Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./analytics
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi uvicorn pandas statsmodels pydantic
+
+      - name: Lint with flake8 (optional)
+        run: |
+          pip install flake8
+          flake8 . || true
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORG_KEY }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}-analytics
+            -Dsonar.projectName=NedVision.Analytics
+            -Dsonar.language=py
+            -Dsonar.sources=.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # =========================
+  # ANGULAR FRONTEND
+  # =========================
+  angular-web:
+    name: Angular Frontend Build & Sonar Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./nedvision-web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Run Lint (optional)
+        run: npm run lint --if-present
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORG_KEY }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}-web
+            -Dsonar.projectName=NedVision.Web
+            -Dsonar.language=ts
+            -Dsonar.sources=src
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

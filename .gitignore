@@ -1,0 +1,81 @@
+# ===========================
+# General
+# ===========================
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+# ===========================
+# Node / Angular
+# ===========================
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# ===========================
+# .NET / C#
+# ===========================
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vs/
+.vscode/
+appsettings.*.local.json
+
+# Publish outputs
+*.Publish.xml
+*.pubxml
+*.pubxml.user
+
+# ===========================
+# Python / FastAPI
+# ===========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite
+*.egg-info/
+.env
+.venv/
+ENV/
+env/
+venv/
+analytics/.venv/
+analytics/__pycache__/
+analytics/*.log
+
+# ===========================
+# Local data
+# ===========================
+data/
+*.csv
+*.xlsx
+*.json
+
+# ===========================
+# OS / Editor junk
+# ===========================
+*.class
+*.iml
+.idea/
+*.orig
+*.rej
+*.zip
+*.tar.gz
+
+# ===========================
+# Environment files
+# ===========================
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
