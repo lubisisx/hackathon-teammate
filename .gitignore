@@ -59,7 +59,6 @@ analytics/*.log
 data/
 *.csv
 *.xlsx
-*.json
 
 # ===========================
 # OS / Editor junk
