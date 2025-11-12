@@ -1,51 +1,84 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartData, ChartOptions } from 'chart.js';
+import 'chart.js/auto'; // auto-register controllers/elements for v4
 
 export type Point = { date: string; cash: number };
+
+// Mixed chart type alias so all generics line up
+type MixedChart = 'bar' | 'line';
 
 @Component({
   selector: 'app-forecast-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BaseChartDirective],
   template: `
-  <div class="chart" *ngIf="bars?.length">
-    <div class="bar"
-         *ngFor="let b of bars; trackBy:track"
-         [title]="b.date + ' • ' + b.cash.toLocaleString('en-ZA',{style:'currency',currency:'ZAR'})"
-         [style.height.%]="b.h"
-         [style.opacity]="0.35"
-         ></div>
-  </div>
+    <div class="chart-wrap bg-white border rounded p-2">
+      <canvas
+        baseChart
+        [data]="chartData"
+        [options]="chartOptions"
+        [type]="chartType">
+      </canvas>
+    </div>
   `,
   styles: [`
-    .chart{height:260px;display:flex;align-items:flex-end;gap:8px;padding:8px;border:1px solid var(--border);background:#fff;border-radius:8px}
-    .bar{width:18px;background:var(--brand);border-radius:4px 4px 0 0;transition:height .2s ease}
-    @media (max-width: 980px){ .bar{ width:10px; gap:4px } }
+    .chart-wrap{ height:260px }
+    @media (max-width: 992px){ .chart-wrap{ height:220px } }
   `]
 })
-export class ForecastChartComponent {
+export class ForecastChartComponent implements OnChanges {
   @Input() history: Point[] = [];
   @Input() forecast: Point[] = [];
+  @Input() scenario: Point[] = [];
 
-  bars: { date: string, cash: number, h: number }[] = [];
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  ngOnChanges() {
-    const merged = [...this.history, ...this.forecast];
-    if (!merged.length) { this.bars = []; return; }
-    // Use only the last ~30 history points to keep it compact
-    const lastHist = this.history.slice(-10);
-    const data = [...lastHist, ...this.forecast];
+  // ✅ use the same union everywhere
+  chartType: MixedChart = 'bar';
 
-    const vals = data.map(d => d.cash);
-    const min = Math.min(...vals);
-    const max = Math.max(...vals);
-    const span = Math.max(1, max - min);
-    this.bars = data.map(d => ({
-      date: d.date,
-      cash: d.cash,
-      h: ((d.cash - min) / span) * 100
-    }));
+  chartData: ChartData<MixedChart> = {
+    labels: [],
+    datasets: [
+      { label: 'History', type: 'bar', data: [], backgroundColor: 'rgba(25,135,84,0.35)' },
+      { label: 'Forecast', type: 'bar', data: [], backgroundColor: 'rgba(25,135,84,0.8)' },
+      { label: 'What-if', type: 'line', data: [], borderColor: 'rgba(255,193,7,1)', backgroundColor: 'rgba(255,193,7,0.15)', borderWidth: 2, pointRadius: 0, tension: 0.2 }
+    ]
+  };
+
+  chartOptions: ChartOptions<MixedChart> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, labels: { boxWidth: 16 } },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: R ${Number(ctx.parsed.y ?? ctx.raw ?? 0).toLocaleString('en-ZA')}`
+        }
+      }
+    },
+    scales: {
+      x: { ticks: { maxRotation: 0, autoSkip: true } },
+      y: { ticks: { callback: (v) => 'R ' + Number(v).toLocaleString('en-ZA') } }
+    }
+  };
+
+  ngOnChanges(): void {
+    // same axis: last 10 history + full forecast
+    const hist = (this.history || []).slice(-10);
+    const fcs = this.forecast || [];
+    const merged = [...hist, ...fcs];
+
+    this.chartData.labels = merged.map(p => p.date);
+    this.chartData.datasets[0].data = hist.map(p => p.cash);
+    this.chartData.datasets[1].data = fcs.map(p => p.cash);
+
+    const sMap = new Map((this.scenario || []).map(p => [p.date, p.cash]));
+    this.chartData.datasets[2].data = (this.chartData.labels ?? []).map(d =>
+      sMap.has(d as string) ? (sMap.get(d as string)! as number) : null
+    );
+
+    queueMicrotask(() => this.chart?.update());
   }
-
-  track = (_: number, item: any) => item.date;
 }

@@ -1,0 +1,13 @@
+date,delta,label
+2025-11-10,-350000,Salaries paid early (month split)
+2025-11-11,-220000,Upfront supplier prepayment (stock)
+2025-11-13,-95000,Emergency equipment replacement
+2025-11-14,-180000,Quarterly SARS provisional tax
+2025-11-16,-60000,Unexpected logistics surcharge
+2025-11-18,-140000,Rent catch-up + utilities spike
+2025-11-20,85000,Client B partial settlement
+2025-11-22,-75000,Chargebacks / refunds window
+2025-11-24,120000,Client D settles milestone invoice
+2025-11-26,-90000,Annual insurance premium
+2025-11-28,95000,Client X payment clears late
+2025-11-30,-110000,Year-end bonuses (reduced)

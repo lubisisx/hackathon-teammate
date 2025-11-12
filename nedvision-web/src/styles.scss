@@ -1,4 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'bootstrap/dist/css/bootstrap.min.css';
 
 :root {
   --bg: #ffffff;
@@ -80,6 +80,18 @@ body {
   .split {
     grid-template-columns: 1fr;
   }
+}
+
+h1,
+h2,
+h3 {
+  font-size: clamp(1rem, 0.6rem + 1.2vw, 1.25rem);
+}
+.value {
+  font-size: clamp(1.25rem, 1rem + 1.6vw, 2rem);
+}
+.btn {
+  font-size: clamp(0.9rem, 0.75rem + 0.5vw, 1rem);
 }
 
 .card {
@@ -178,4 +190,32 @@ body {
 }
 .mono {
   font-variant-numeric: tabular-nums;
+}
+
+/* --- layout for the lower section --- */
+.layout-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* 3 equal columns */
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.span-2 {
+  grid-column: span 2; /* forecast spans two columns */
+}
+
+/* stack on small screens */
+@media (max-width: 980px) {
+  .layout-3 {
+    grid-template-columns: 1fr;
+  }
+  .span-2 {
+    grid-column: auto;
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
